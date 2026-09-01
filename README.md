@@ -1,1 +1,0 @@
-# MLOps-Training-Tasks-Qafza
