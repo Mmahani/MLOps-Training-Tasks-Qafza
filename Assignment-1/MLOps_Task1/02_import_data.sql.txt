@@ -1,0 +1,49 @@
+-- =====================================================
+-- MLOps Training - Task 1
+-- 02 - Import Data
+-- =====================================================
+
+COPY customers
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_customers_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY orders
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_orders_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY order_items
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_order_items_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY products
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_products_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY sellers
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_sellers_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY order_payments
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_order_payments_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY order_reviews
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_order_reviews_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY geolocation
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/olist_geolocation_dataset.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY product_category_translation
+FROM 'C:/Users/HP/Desktop/MLOPS/Tasks/product_category_name_translation.csv'
+DELIMITER ','
+CSV HEADER;

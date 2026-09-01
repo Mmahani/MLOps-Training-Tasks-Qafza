@@ -1,0 +1,89 @@
+-- =====================================================
+-- MLOps Training - Task 1
+-- 04 - JOIN Tests
+-- =====================================================
+
+
+-- =====================================================
+-- 1. JOIN Orders with Customers
+-- =====================================================
+
+SELECT
+    o.order_id,
+    o.customer_id,
+    c.customer_city,
+    c.customer_state,
+    o.order_status,
+    o.order_purchase_timestamp,
+    o.order_estimated_delivery_date,
+    o.order_delivered_customer_date
+FROM orders o
+JOIN customers c
+    ON o.customer_id = c.customer_id
+LIMIT 10;
+
+
+-- =====================================================
+-- 2. Check Delivery Status
+-- =====================================================
+
+SELECT
+    o.order_id,
+    c.customer_city,
+    o.order_status,
+    o.order_estimated_delivery_date,
+    o.order_delivered_customer_date,
+
+    CASE
+        WHEN o.order_delivered_customer_date >
+             o.order_estimated_delivery_date
+        THEN 'Late'
+
+        ELSE 'On Time'
+    END AS delivery_status
+
+FROM orders o
+
+JOIN customers c
+    ON o.customer_id = c.customer_id
+
+WHERE o.order_delivered_customer_date IS NOT NULL
+
+LIMIT 10;
+
+
+-- =====================================================
+-- 3. JOIN Orders with Order Items
+-- =====================================================
+
+SELECT
+    o.order_id,
+    o.order_status,
+    oi.product_id,
+    oi.seller_id,
+    oi.price,
+    oi.freight_value
+FROM orders o
+
+JOIN order_items oi
+    ON o.order_id = oi.order_id
+
+LIMIT 10;
+
+
+-- =====================================================
+-- 4. JOIN Order Items with Products
+-- =====================================================
+
+SELECT
+    oi.order_id,
+    oi.product_id,
+    p.product_category_name,
+    oi.price,
+    oi.freight_value
+FROM order_items oi
+
+JOIN products p
+    ON oi.product_id = p.product_id
+
+LIMIT 10;
