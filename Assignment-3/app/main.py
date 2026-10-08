@@ -1,7 +1,6 @@
 import logging
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 
@@ -11,6 +10,7 @@ from app.schemas import (
     OrderFeatures,
     PredictionResponse,
 )
+from src.config import get_model_dir
 from src.logging_config import setup_logging
 from src.predictor import Predictor
 
@@ -22,11 +22,7 @@ logger = logging.getLogger(
 )
 
 
-MODEL_DIR = (
-    Path(__file__).resolve().parents[1]
-    / "models"
-)
-
+MODEL_DIR = get_model_dir()
 
 predictor = None
 
@@ -34,7 +30,7 @@ predictor = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Load the model once when the API starts.
+    Load the trained model when the API starts.
     """
 
     global predictor
@@ -71,7 +67,7 @@ async def log_requests(
     call_next,
 ):
     """
-    Log every HTTP request and its duration.
+    Log every request and its execution time.
     """
 
     start_time = time.perf_counter()
@@ -112,7 +108,7 @@ async def log_requests(
 def health():
     """
     Check whether the API is running
-    and the model is loaded.
+    and whether the model is loaded.
     """
 
     return {
@@ -144,7 +140,9 @@ def model_info():
     "/predict",
     response_model=PredictionResponse,
 )
-def predict(order: OrderFeatures):
+def predict(
+    order: OrderFeatures,
+):
     """
     Predict one order.
     """
@@ -155,11 +153,13 @@ def predict(order: OrderFeatures):
             detail="Model is not loaded",
         )
 
-    result = predictor.predict(
-        records=[order.model_dump()]
+    results = predictor.predict(
+        records=[
+            order.model_dump()
+        ]
     )
 
-    return result[0]
+    return results[0]
 
 
 @app.post(
@@ -189,5 +189,5 @@ def predict_batch(
     )
 
     return {
-        "predictions": results,
+        "predictions": results
     }

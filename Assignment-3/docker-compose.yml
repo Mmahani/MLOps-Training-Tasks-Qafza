@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qafza-api
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_DIR: /service/models
+      MODEL_VERSION: task2-final-model
+      LOG_LEVEL: INFO
+    volumes:
+      - ./models:/service/models:ro
+      - ./logs:/service/logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: qafza-postgres
+    environment:
+      POSTGRES_DB: qafza
+      POSTGRES_USER: qafza
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qafza -d qafza"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

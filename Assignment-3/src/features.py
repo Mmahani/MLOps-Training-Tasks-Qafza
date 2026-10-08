@@ -4,6 +4,8 @@ from typing import Any
 
 import pandas as pd
 
+from src.validation import validate_records
+
 
 EXPECTED_FEATURES = [
     "customer_state",
@@ -42,7 +44,11 @@ def validate_feature_frame(
     frame: pd.DataFrame,
     expected_features: list[str] | None = None,
 ) -> None:
-    """Validate input data before sending it to the model."""
+    """
+    Validate the feature DataFrame before inference.
+
+    This function does not train or fit anything.
+    """
 
     expected = expected_features or EXPECTED_FEATURES
 
@@ -74,7 +80,9 @@ def validate_feature_frame(
         )
 
     for column in NUMERIC_FEATURES:
-        if not pd.api.types.is_numeric_dtype(frame[column]):
+        if not pd.api.types.is_numeric_dtype(
+            frame[column]
+        ):
             raise ValueError(
                 f"Feature '{column}' must be numeric"
             )
@@ -84,19 +92,44 @@ def validate_feature_frame(
             "customer_state cannot be null"
         )
 
-    if (frame["purchase_month"].dropna() < 0).any():
+    if (frame["purchase_year"] < 2000).any():
         raise ValueError(
-            "purchase_month cannot be negative"
+            "purchase_year cannot be less than 2000"
         )
 
-    if (frame["purchase_dayofweek"].dropna() < 0).any():
+    if (frame["purchase_year"] > 2100).any():
+        raise ValueError(
+            "purchase_year cannot be greater than 2100"
+        )
+
+    if (frame["purchase_month"] < 1).any():
+        raise ValueError(
+            "purchase_month cannot be less than 1"
+        )
+
+    if (frame["purchase_month"] > 12).any():
+        raise ValueError(
+            "purchase_month cannot be greater than 12"
+        )
+
+    if (frame["purchase_dayofweek"] < 0).any():
         raise ValueError(
             "purchase_dayofweek cannot be negative"
         )
 
-    if (frame["purchase_hour"].dropna() < 0).any():
+    if (frame["purchase_dayofweek"] > 6).any():
+        raise ValueError(
+            "purchase_dayofweek cannot be greater than 6"
+        )
+
+    if (frame["purchase_hour"] < 0).any():
         raise ValueError(
             "purchase_hour cannot be negative"
+        )
+
+    if (frame["purchase_hour"] > 23).any():
+        raise ValueError(
+            "purchase_hour cannot be greater than 23"
         )
 
 
@@ -104,39 +137,29 @@ def build_feature_frame(
     records: list[dict[str, Any]],
     expected_features: list[str],
 ) -> pd.DataFrame:
-    """Convert request records into a validated DataFrame."""
+    """
+    Convert raw records into a validated DataFrame.
+
+    The validation is delegated to validation.py.
+    """
 
     if not records:
         raise ValueError(
             "At least one input row is required"
         )
 
-    expected = set(expected_features)
+    if expected_features != EXPECTED_FEATURES:
+        raise ValueError(
+            "Unexpected feature definition"
+        )
 
-    for record in records:
-        incoming = set(record.keys())
-
-        missing = sorted(expected - incoming)
-        extra = sorted(incoming - expected)
-
-        if missing:
-            raise ValueError(
-                f"Missing required features: {missing}"
-            )
-
-        if extra:
-            raise ValueError(
-                f"Unexpected features: {extra}"
-            )
-
-    frame = pd.DataFrame(
-        records,
-        columns=expected_features,
+    frame = validate_records(
+        records=records
     )
 
     validate_feature_frame(
-        frame,
-        expected_features,
+        frame=frame,
+        expected_features=expected_features,
     )
 
     return frame
@@ -147,18 +170,20 @@ def transform_for_inference(
     preprocessor: Any,
 ):
     """
-    Transform data using the fitted preprocessor.
+    Transform data using the already-fitted preprocessor.
 
     Important:
-    We use transform() only.
-    We do not use fit() or fit_transform().
+    This function uses transform() only.
+    It never uses fit() or fit_transform().
     """
 
     validate_feature_frame(
-        frame,
-        list(frame.columns),
+        frame=frame,
+        expected_features=list(frame.columns),
     )
 
-    transformed = preprocessor.transform(frame)
+    transformed = preprocessor.transform(
+        frame
+    )
 
     return transformed

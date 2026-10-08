@@ -1,9 +1,13 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 SAMPLE_ORDER = {
@@ -23,7 +27,7 @@ SAMPLE_ORDER = {
 }
 
 
-def test_health_endpoint():
+def test_health_endpoint(client):
     response = client.get("/health")
 
     assert response.status_code == 200
@@ -34,7 +38,7 @@ def test_health_endpoint():
     assert body["model_loaded"] is True
 
 
-def test_model_info_endpoint():
+def test_model_info_endpoint(client):
     response = client.get("/model-info")
 
     assert response.status_code == 200
@@ -46,7 +50,7 @@ def test_model_info_endpoint():
     assert len(body["features"]) == 13
 
 
-def test_predict_endpoint():
+def test_predict_endpoint(client):
     response = client.post(
         "/predict",
         json=SAMPLE_ORDER,
@@ -64,7 +68,7 @@ def test_predict_endpoint():
     assert 0 <= body["probability"] <= 1
 
 
-def test_batch_predict_endpoint():
+def test_batch_predict_endpoint(client):
     response = client.post(
         "/predict/batch",
         json={
@@ -83,9 +87,8 @@ def test_batch_predict_endpoint():
     assert len(body["predictions"]) == 2
 
 
-def test_invalid_month_is_rejected():
+def test_invalid_month_is_rejected(client):
     invalid_order = dict(SAMPLE_ORDER)
-
     invalid_order["purchase_month"] = 15
 
     response = client.post(
@@ -96,9 +99,8 @@ def test_invalid_month_is_rejected():
     assert response.status_code == 422
 
 
-def test_target_leakage_is_rejected():
+def test_target_leakage_is_rejected(client):
     leakage_order = dict(SAMPLE_ORDER)
-
     leakage_order["is_late"] = 1
 
     response = client.post(
